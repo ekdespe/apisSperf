@@ -11,7 +11,7 @@ class Work_time(EmbeddedDocument):
     day_of_week = StringField()
     entry_time  = DateTimeField()
     leave_time  = DateTimeField()
-
+    work_day_id = IntField()
 
 class Point_records(EmbeddedDocument):
     point_entry_time  = DateTimeField()

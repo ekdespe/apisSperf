@@ -24,25 +24,55 @@ class DateTimeEncoder(json.JSONEncoder):
 
 
 class Query_Mongo:
-    def Get_Point_Records_by_registration_month_year(self,registration,month,year,first=None,last=None):
-        pipelinne = [ 
+    def Get_Point_Records_by_registration_month_year(self,month,year,reg,day):
+ 
 
-        {"$match":{"registration":registration}},
+        print(reg)
+        print(day)
+        print(month) 
+        print(year)
 
-        {"$project":{"_id":0,"point_records":{"$filter":{"input":"$point_records","as":"p_r","cond": { "$and":[{  "$eq": [{"$month":"$$p_r.point_entry_time"},month]   },   { "$eq": [{"$year":"$$p_r.point_entry_time"},year]}]}}}}}
+
+
+        if day and reg:
+            pipelinne = [ 
+
+            {"$match":{"registration":reg}},
+
+            {"$project":{"_id":0,"point_records":{"$filter":{"input":"$point_records","as":"p_r","cond": { "$and":[{  "$eq": [{"$month":"$$p_r.point_entry_time"},month  ] },   { "$eq": [{"$year":"$$p_r.point_entry_time"},year]},{"$eq":[{"$dayOfMonth":"$$p_r.point_entry_time"},day ]  }  ]}}}}}
   
-        ]
+            ]
+        if  (not day) and reg:
+            pipelinne = [ 
+
+            {"$match":{"registration":kwargs[reg]}},
+
+            {"$project":{"_id":0,"point_records":{"$filter":{"input":"$point_records","as":"p_r","cond": { "$and":[{  "$eq": [{"$month":"$$p_r.point_entry_time"},month ]  },   { "$eq": [{"$year":"$$p_r.point_entry_time"},year]}  ]}}}}}
+  
+            ]
+        if (not reg) and day:
+            pipelinne = [ 
+
+            #{"$match":{"registration":kwargs[reg]}},
+
+            {"$project":{"_id":0,"point_records":{"$filter":{"input":"$point_records","as":"p_r","cond": { "$and":[{  "$eq": [{"$month":"$$p_r.point_entry_time"},month]   },   { "$eq": [{"$year":"$$p_r.point_entry_time"},year]},{"$eq":[{"$dayOfMonth":"$$p_r.point_entry_time"},day ]  }  ]}}}}}
+  
+            ]
+
+        if (not reg) and (not day):
+            pipelinne = [ 
+
+ #           {"$match":{"registration":kwargs[reg]}},
+
+            {"$project":{"_id":0,"point_records":{"$filter":{"input":"$point_records","as":"p_r","cond": { "$and":[{  "$eq": [{"$month":"$$p_r.point_entry_time"},month  ] },   { "$eq": [{"$year":"$$p_r.point_entry_time"},year]}  ]}}}}}
+  
+            ]
+
+
 
         users = list(( Users.objects.aggregate(*pipelinne)))
         users = json.dumps(users,sort_keys=True,default=json_util.default)
-       #users = json.dumps(users,cls=DateTimeEncoder,sort_keys=True)
         users = Users.objects.from_json(users)
-        #for key in users[0]['point_records']:
-        #   print(key)
-        if first:
-            return (users[0]['point_records'][:first])
-        if last:
-            return (users[0]['point_records'][-last])
         
         return (users[0]['point_records'])
         

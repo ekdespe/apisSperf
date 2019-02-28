@@ -30,6 +30,7 @@ class Work_timeInput(graphene.InputObjectType):
     day_of_week = graphene.String()
     entry_time  = graphene.DateTime()
     leave_time  = graphene.DateTime()
+    work_day_id = graphene.Int()
 
 
 
@@ -118,11 +119,15 @@ class Query(graphene.ObjectType):
      
     
     #user_ point_records = graphene.List(Point_records,reg=graphene.Int(),month=graphene.Int(),year=graphene.Int())
-    #user_point_records = MongoengineConnectionField(Point_records,reg=graphene.Int(),month=graphene.Int(),year=graphene.Int())
-    user_point_records = graphene.List(Point_records,first=graphene.Int(),last=graphene.Int(),reg=graphene.Int(),month=graphene.Int(),year=graphene.Int())
-    def resolve_user_point_records(self,info,reg,month,year,first=None,last=None,**kargs):
+    #user_point_records = graphene.List(Point_records,first=graphene.Int(),last=graphene.Int(),reg=graphene.Int(),month=graphene.Int(),year=graphene.Int())
+    user_point_records =MongoengineConnectionField( Point_records,reg=graphene.Int(required=False),month=graphene.Int(),year=graphene.Int(),day=graphene.Int(required=False))
+    
+    
+    
+    def resolve_user_point_records(self,info,month,year,reg=None,day=None):
         q = Query_Mongo();
-        return list(q.Get_Point_Records_by_registration_month_year(reg,month,year,first,last))
+        return list(q.Get_Point_Records_by_registration_month_year(month,year,reg,day))
+
      
     def resolve_users(self,info):
         return list(UsersModel.objects.all())

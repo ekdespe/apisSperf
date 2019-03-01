@@ -3,20 +3,35 @@ import graphene
 from graphene.relay import Node
 from graphene_mongo import MongoengineConnectionField, MongoengineObjectType
 from models import Users as UsersModel
-from models import Work_time as Work_timeModel
 from models import Point_records as Point_recordsModel
+from models import Work_time as Work_timeModel
 from querysMongo import Query_Mongo
-
 
 class Point_records(MongoengineObjectType):
     class Meta:
         model = Point_recordsModel
         interfaces= (Node,)
 
+
+class Test_records(graphene.ObjectType):
+    user_name = graphene.String()
+    
+
+
+class User_records(graphene.ObjectType):
+    class Meta:
+        interfaces = (Node,)
+    name              = graphene.String()
+    point_records = graphene.List(Point_records)
+
+class User_records_connection(graphene.Connection):
+    class Meta:
+        node = User_records
+
 class Point_recordInput(graphene.InputObjectType):
     point_entry_time  = graphene.DateTime()
     point_leave_time  = graphene.DateTime()
-    point_worked_time = graphene.Time()
+    point_worked_time = graphene.DateTime()
     report            = graphene.String()
 
 class Work_time(MongoengineObjectType):
@@ -115,22 +130,28 @@ class Query(graphene.ObjectType):
      
     node =  Node.Field()
     user = MongoengineConnectionField(Users)
-     #point_records =( MongoengineConnectionField(Point_records,registration=graphene.Int(),month=graphene.Int(),year=graphene.Int()))
-     
-    
-    #user_ point_records = graphene.List(Point_records,reg=graphene.Int(),month=graphene.Int(),year=graphene.Int())
-    #user_point_records = graphene.List(Point_records,first=graphene.Int(),last=graphene.Int(),reg=graphene.Int(),month=graphene.Int(),year=graphene.Int())
-    user_point_records =MongoengineConnectionField( Point_records,reg=graphene.Int(required=False),month=graphene.Int(),year=graphene.Int(),day=graphene.Int(required=False))
+    user_records = graphene.relay.ConnectionField(User_records_connection, first=graphene.Int(),last=graphene.Int(),month=graphene.Int(),year=graphene.Int())
+    test_records = graphene.List(Test_records)
+    user_point_records =MongoengineConnectionField( Point_records,first=graphene.Int(),last=graphene.Int(),reg=graphene.Int(),month=graphene.Int(),year=graphene.Int(),day=graphene.Int())
     
     
     
-    def resolve_user_point_records(self,info,month,year,reg=None,day=None):
+    def resolve_user_point_records(self,info,month,year,reg,day=None,first=None,last=None):
         q = Query_Mongo();
         return list(q.Get_Point_Records_by_registration_month_year(month,year,reg,day))
+    
+    def resolve_user_records(self,info,month,year,first=None,last=None):
+        q = Query_Mongo();
+        return list(q.Get_Relatory_Point_Records_month_year(month,year))
 
      
     def resolve_users(self,info):
         return list(UsersModel.objects.all())
      
-
-schema = graphene.Schema(query=Query, types=[Users,Point_records ,Work_time ],mutation=Mutations)
+    def resolve_test_records(self,info):
+        nomes = [Test_records(user_name='erik'),Test_records(user_name='joao')]
+        
+        
+        
+        return nomes
+schema = graphene.Schema(query=Query, types=[Users,Point_records ,Work_time,Test_records ],mutation=Mutations)

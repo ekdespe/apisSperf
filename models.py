@@ -33,6 +33,9 @@ class Users(Document):
     work_time       = EmbeddedDocumentListField(Work_time)
     point_records   = EmbeddedDocumentListField(Point_records)
     
+class Users_records(Document):
+    name            = StringField()
+    point_records   = EmbeddedDocumentListField(Point_records)
     
 
 

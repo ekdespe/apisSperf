@@ -16,8 +16,8 @@ class Work_time(EmbeddedDocument):
 class Point_records(EmbeddedDocument):
     point_entry_time  = DateTimeField()
     point_leave_time  = DateTimeField()
-    point_worked_time = DateTimeField()
     report            = StringField()
+    point_worked_time_seconds = IntField()
     
 
 class Users(Document):
@@ -38,5 +38,8 @@ class Users_records(Document):
     point_records   = EmbeddedDocumentListField(Point_records)
     
 
+class Users_Worked_time(Document):
+    name                     = StringField()
+    worked_time_month        = IntField()
 
 

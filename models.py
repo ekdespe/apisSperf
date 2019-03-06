@@ -9,8 +9,8 @@ from mongoengine.fields import (
 
 class Work_time(EmbeddedDocument):
     day_of_week = StringField()
-    entry_time  = DateTimeField()
-    leave_time  = DateTimeField()
+    entry_time  = StringField()
+    leave_time  = StringField()
     work_day_id = IntField()
 
 class Point_records(EmbeddedDocument):

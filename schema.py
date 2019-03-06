@@ -8,6 +8,34 @@ from models import Work_time as Work_timeModel
 from querysMongo import Query_Mongo
 from graphql import GraphQLError as gError
 
+
+class Day_of_Works(graphene.Enum):
+    Domingo   =   'Domingo'
+    Segunda   =   'Segunda'
+    Terca     =   'Terça'
+    Quarta    =   'Quarta'
+    Quinta    =   'Quinta'
+    Sexta     =   'Sexta'
+    Sabado    =   'Sábado'
+    
+
+    @property
+    def description(self):
+        if self == Day_of_Works.Domingo:
+            return ' Domingo | 1º Dia da Semana'
+        if self == Day_of_Works.Segunda:
+            return 'Segunda-Feira | 2º Dia da Semana'
+        if self == Day_of_Works.Terca:
+            return 'Terça Feira | 3º Dia da Semana'
+        if self == Day_of_Works.Quarta:
+            return 'Quarta-Feira| 4º Dia da Semana'
+        if self == Day_of_Works.Quinta:
+            return 'Quinta-Feira | 5º Dia da Semana'
+        if self == Day_of_Works.Sexta:
+            return 'Sexta-Feira | 6º Dia da Semana'
+        if self == Day_of_Works.Sabado:
+            return 'Sábado | Dia de Descanso '
+
 class Point_records(MongoengineObjectType):
     class Meta:
         model = Point_recordsModel
@@ -52,9 +80,9 @@ class Work_time(MongoengineObjectType):
 
 
 class Work_timeInput(graphene.InputObjectType):
-    day_of_week = graphene.String()
-    entry_time  = graphene.DateTime()
-    leave_time  = graphene.DateTime()
+    day_of_week = graphene.Field(Day_of_Works)
+    entry_time  = graphene.String()
+    leave_time  = graphene.String()
     work_day_id = graphene.Int()
 
 
@@ -133,6 +161,87 @@ class Set_Point_record_leave_time(graphene.Mutation):
         return CreatePoint_Record(point_records=point_records)
 
 
+
+class Set_Work_Time(graphene.Mutation):
+    class Arguments:
+        user_id = graphene.Int()
+        day_of_week = Day_of_Works()
+        entry_time  = graphene.Time()
+        leave_time  = graphene.Time()
+        work_day_id = graphene.Int()
+    work_time = graphene.Field(Work_time)
+    @staticmethod
+    def mutate(root,info,user_id,work_day_id,day_of_week=None,entry_time=None,leave_time=None):
+            
+        work_time = Work_time(
+                day_of_week = day_of_week,
+                entry_time = entry_time,
+                leave_time = leave_time
+              
+                ) 
+
+
+        q = Query_Mongo();
+       
+        result = q.Set_work_time(user_id,work_day_id,day_of_week=day_of_week,entry_time=entry_time,leave_time=leave_time)
+        if result:
+            raise gError(result)
+
+            
+        return Set_Work_Time(work_time = work_time)
+
+class DeleteWork_Time(graphene.Mutation):
+    class Arguments:
+        user_id = graphene.Int()
+        work_day_id = graphene.Int()
+    work_time = graphene.Field(Work_time)
+    @staticmethod
+    def mutate(root,info,user_id,work_day_id):
+            
+        work_time = Work_time(
+                work_day_id = work_day_id
+
+                ) 
+
+
+        q = Query_Mongo();
+       
+        result = q.Delete_work_time(user_id,work_day_id)
+        if result:
+            raise gError(result)
+
+            
+        return DeleteWork_Time(work_time = work_time)
+
+class CreateWork_Time(graphene.Mutation):
+
+    class Arguments:
+        user_id = graphene.Int()
+        day_of_week = Day_of_Works()
+        entry_time  = graphene.Time()
+        leave_time  = graphene.Time()
+        work_day_id = graphene.Int()
+
+    work_time = graphene.Field(Work_time)
+    @staticmethod
+    def mutate(root,info,user_id,day_of_week,entry_time,leave_time):
+            
+        work_time = Work_time(
+                day_of_week = day_of_week,
+                entry_time = entry_time,
+                leave_time = leave_time
+
+                ) 
+
+
+        q = Query_Mongo();
+       
+        result = q.Create_work_time(user_id,day_of_week,entry_time,leave_time)
+        if result:
+            raise gError(result)
+
+            
+        return CreateWork_Time(work_time = work_time)
 
 
 
@@ -216,9 +325,10 @@ class Mutations(graphene.ObjectType):
     create_point_record_set_entry_time = CreatePoint_Record.Field()
     set_point_record_leave_time = Set_Point_record_leave_time.Field()
     set_point_record_report = Set_Point_record_report.Field()
-
-
-
+    create_work_time = CreateWork_Time.Field()
+    set_work_time = Set_Work_Time.Field()
+    delete_work_time =DeleteWork_Time.Field()
+    
 class Query(graphene.ObjectType):
      
     node =  Node.Field()

@@ -28,7 +28,45 @@ class DateTimeEncoder(json.JSONEncoder):
 class Query_Mongo:
     
     
-    
+       
+    def Delete_work_time(self,user_id,work_day_id):
+        queryUpdate=   {'$pull':{'work_time':{'work_day_id':work_day_id}}}
+        result =  Users.objects(registration=user_id).update_one(__raw__=queryUpdate)
+        result = None
+
+
+
+    def Set_work_time(self,user_id,work_day_id,**kwargs):
+        
+       #result =  Users.objects(registration=user_id,work_time__work_day_id=work_day_id).update_one(set__work_time__S__entry_time=entry_time,set__work_time__S__leave_time=leave_time,set__work_time__S__day_of_week=day_of_week )
+        queryUpdate = { 'set__work_time__S__'+key : str(value) for (key,value) in kwargs.items() if value     }
+        result =  Users.objects(registration=user_id,work_time__work_day_id=work_day_id).update_one(**queryUpdate)
+        result = None
+        return result
+
+
+
+    def Create_work_time(self,user_id,day_of_week,entry_time,leave_time):
+        
+        query =  {"registration":user_id} , {"work_time":{ "$elemMatch": { "day_of_week":day_of_week ,"entry_time":entry_time ,"leave_time":leave_time} },"_id":0 } 
+        
+        result =  list(Users.objects(registration=user_id,work_time__day_of_week=day_of_week,work_time__entry_time=str(entry_time),work_time__leave_time=str(leave_time)))
+        if result:
+           result = 'Error! The work_time alredy exists!'
+            
+        else:
+            work_day_id = int(datetime.now().timestamp())
+            payload = { "day_of_week":day_of_week,
+                    "entry_time":str(entry_time),
+                    "leave_time":str(leave_time),
+                    "work_day_id":work_day_id
+                    }
+
+            Users.objects(registration=user_id).update_one(push__work_time=payload)
+            result = None
+            
+        return result
+
     def Set_point_records_report(self,user_id,report):
         pipelinne=[
                 {"$match":{"registration":user_id}},

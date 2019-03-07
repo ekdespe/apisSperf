@@ -1,9 +1,0 @@
-bloquer bater o ponto até dar o horário de saída
-
-
-
-
-
-db.users.update( {"registration":{$exists:true}} ,{ $set: {"point_records.$[].date":ISODate("2016-05-17")}}, { multi:true})
-
-

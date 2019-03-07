@@ -109,6 +109,16 @@ class UserInput(graphene.InputObjectType):
     work_time       = graphene.InputField(Work_timeInput)
     point_records   = graphene.InputField(Point_recordInput)
 
+class UpdateUserInput(graphene.InputObjectType):
+        
+    name            = graphene.String()
+    id_image        = graphene.Int()
+    user_name       = graphene.String()
+    user_password   = graphene.String()
+    image           = graphene.String()
+    registration    = graphene.Int(unique=True)
+    email           = graphene.String()
+    telephone       = graphene.String()
 
 
 
@@ -269,6 +279,43 @@ class CreatePoint_Record(graphene.Mutation):
         return CreatePoint_Record(point_records=point_records)
 
 
+class DeleteUser(graphene.Mutation):
+    class Arguments:
+        registration = graphene.Int()
+    user = graphene.Field(Users)
+    @staticmethod
+    def mutate(root,info,registration):
+        user_response = user = UsersModel.objects.get(registration=registration)
+        user_response.delete()
+        return DeleteUser(user=user)
+
+
+
+class UpdateUser(graphene.Mutation):
+    class Arguments:
+        user_data = UpdateUserInput(required=True)
+        registration = graphene.Int()
+
+
+    user = graphene.Field(Users)
+    @staticmethod
+    def mutate(root,info,registration,user_data=None):
+        UsersModel.objects(registration=registration).update(**user_data)
+        user = Users(
+               
+                name            = user_data.name,
+                id_image        = user_data.id_image,
+                user_name       = user_data.user_name,
+                user_password   = user_data.user_password,
+                image           = user_data.image,
+                registration    = user_data.registration,
+                email           = user_data.email,
+                telephone       = user_data.telephone
+    
+                )
+               
+        return UpdateUser(user=user)
+
 class CreateUser(graphene.Mutation):
     class Arguments:
         user_data = UserInput(required=True)
@@ -328,7 +375,10 @@ class Mutations(graphene.ObjectType):
     create_work_time = CreateWork_Time.Field()
     set_work_time = Set_Work_Time.Field()
     delete_work_time =DeleteWork_Time.Field()
-    
+    delete_user = DeleteUser.Field()
+    update_user = UpdateUser.Field()
+
+
 class Query(graphene.ObjectType):
      
     node =  Node.Field()
